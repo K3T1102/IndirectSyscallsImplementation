@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="IndirectSyscalls-implementation.vcxproj" Id="96976d21-42d8-4276-93e6-a453cb84bee5" />
+</Solution>

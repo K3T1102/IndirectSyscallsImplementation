@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "Indirect.96976d21\\x64\\Debug\\peb_walking.obj",
+            "outputs": [
+                "Indirect.96976d21\\x64\\Debug\\peb_walking.cpp.obj.dt.module.json",
+                "Indirect.96976d21\\x64\\Debug\\peb_walking.cpp.obj.dt.d.json"
+            ],
+            "requires": []
+        }
+    ]
+}
