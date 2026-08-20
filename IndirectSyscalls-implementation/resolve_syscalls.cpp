@@ -172,22 +172,28 @@ BOOL InitializeSycallTable(void) {
 	return allResolved;
 }
 
-DWORD GetSSNFromSyscallTable(const char* Name) {
+BOOL GetSSNFromSyscallTable(const char* Name, DWORD* NtfunctionSSN) {
     for (int i = 0; i < SYSCALL_COUNT; i++)
     {
         if (strcmp(Syscalls[i].Name, Name) == 0)
-            return Syscalls[i].SSN;
+        {
+            *NtfunctionSSN = Syscalls[i].SSN;
+            return TRUE;
+        }
     }
 
-    return 0;
+    return FALSE;
 }
 
-PVOID GetGadgetFromSyscallTable(const char* Name) {
+BOOL GetGadgetFromSyscallTable(const char* Name, QWORD* NtfunctionSyscall) {
     for (int i = 0; i < SYSCALL_COUNT; i++)
     {
         if (strcmp(Syscalls[i].Name, Name) == 0)
-            return Syscalls[i].Gadget;
+        {
+            *NtfunctionSyscall = (QWORD)Syscalls[i].Gadget;
+            return TRUE;
+        }
     }
 
-    return 0;
-}
+    return FALSE;
+ }

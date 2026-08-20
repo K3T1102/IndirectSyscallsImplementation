@@ -140,6 +140,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="globals.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="peb_walking.cpp" />
     <ClCompile Include="resolve_syscalls.cpp" />

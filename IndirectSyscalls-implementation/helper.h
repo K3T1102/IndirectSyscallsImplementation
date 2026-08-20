@@ -43,9 +43,19 @@ enum
     SYSCALL_COUNT
 };
 
-// Enumeração para indicar como a syscall foi resolvida
-
-
+// Variáveis globais que vão passar para o asembly armazenando SSN e endereço do gadget
+extern "C" {
+    extern DWORD g_NtAllocateVirtualMemorySSN;
+    extern QWORD g_NtAllocateVirtualMemorySyscall;
+    extern DWORD g_NtWriteVirtualMemorySSN;
+    extern QWORD g_NtWriteVirtualMemorySyscall;
+    extern DWORD g_NtCreateThreadExSSN;
+    extern QWORD g_NtCreateThreadExSyscall;
+    extern DWORD g_NtWaitForSingleObjectSSN;
+    extern QWORD g_NtWaitForSingleObjectSyscall;
+    extern DWORD g_NtCloseSSN;
+    extern QWORD g_NtCloseSyscall;
+}
 // Struct que armazena as syscalls
 struct SYSCALL_ENTRY
 {
@@ -63,6 +73,47 @@ BOOL ResolveSSNFromNeighbor(_In_ PBYTE stubAddr, _Out_ DWORD* outSSN);
 PVOID FindSyscallGadget(_In_ PBYTE stubAddr);
 BOOL ResolveAllSyscalls(const char* funcName, SYSCALL_ENTRY* Syscall);
 BOOL InitializeSycallTable(void);
-DWORD GetSSNFromSyscallTable(const char* Name);
-PVOID GetGadgetFromSyscallTable(const char* Name);
+BOOL GetSSNFromSyscallTable(const char* Name, DWORD* NtfunctionSSN);
+BOOL GetGadgetFromSyscallTable(const char* Name, QWORD* NtfunctionSyscall);
 
+// Declarações das funções nativas
+extern "C" NTSTATUS NtAllocateVirtualMemory(
+    _In_      HANDLE ProcessHandle,
+    _Inout_   PVOID* BaseAddress,
+    _In_      ULONG ZeroBits,
+    _Inout_   PSIZE_T RegionSize,
+    _In_      ULONG AllocationType,
+    _In_      ULONG Protect
+);
+
+extern "C" NTSTATUS NtWriteVirtualMemory(
+    _In_      HANDLE ProcessHandle,
+    _In_      PVOID BaseAddress,
+    _In_      PVOID Buffer,
+    _In_      SIZE_T NumberOfBytesToWrite,
+    _Out_opt_ PSIZE_T NumberOfBytesWritten
+);
+
+extern "C" NTSTATUS NtCreateThreadEx(
+    _Out_ PHANDLE ThreadHandle,
+    _In_  ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_  HANDLE ProcessHandle,
+    _In_  PVOID StartRoutine,
+    _In_opt_ PVOID Argument,
+    _In_  ULONG CreateFlags,
+    _In_  SIZE_T ZeroBits,
+    _In_  SIZE_T StackSize,
+    _In_  SIZE_T MaximumStackSize,
+    _In_opt_ PVOID AttributeList
+);
+
+extern "C" NTSTATUS NtWaitForSingleObject(
+    _In_ HANDLE Handle,
+    _In_ BOOLEAN Alertable,
+    _In_opt_ PLARGE_INTEGER Timeout
+);
+
+extern "C" NTSTATUS NtClose(
+    _In_ HANDLE Handle
+);
