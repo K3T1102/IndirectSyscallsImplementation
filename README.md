@@ -15,6 +15,7 @@ IndirectSyscalls-implementation
     ├── helper.h 
     ├── resolve_syscalls.cpp 
     ├── stub.asm
+    ├── globals.cpp
     └── main.cpp 
 ```
 No arquivo peb_walking.cpp, está a implementação de duas funções, a GetNtdllBase e GetModuleHandlePeb. A primeira, procura o módulo ntdll.dll e a segunda procura as funções dentro desse módulo.
@@ -23,7 +24,9 @@ No arquivo helper.h, está a definição de todas as funções, macros e structs
 
 No arquivo resolve_syscalls.cpp, está a implementação das funções que verificam se o stub está limpo, que recuperam os SSNs e os gadgets, populando a struct das syscalls logo em seguida.
 
-No arquivo stub.asm está o stub assembly que será usado para executar as funções Nt via Direct Syscalls.
+No arquivo globals.cpp, está a declaração das variáveis globais que vão ser utilizadas pelo stub.asm.
+
+No arquivo stub.asm está o stub assembly que será usado para executar as funções Nt via Indirect Syscalls.
 
 No main.cpp está a declarações das funções Nt e suas chamadas no estilo da técnica Hell's Gate (MeowGate e MeowDescent). As funções Nt utilizadas executam uma injeção de código (shellcode) no próprio processo (GetCurrentProcess( ) ) clássica. (NtAllocateVirtualMemory + NtWriteVirtualMemory + NtCreateThreadEx + NtWaitForSingleObject + NtClose)
 
